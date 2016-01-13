@@ -51,6 +51,7 @@
 		<script>
 			var data = [];
 			var ordered = compareName;
+			var HOUR = 60 * 60 * 1000;
 
 			// TODO: order by multiple columns
 
@@ -100,16 +101,53 @@
 				});
   			};
 
-			$(document).ready(function() {
-				// Make AJAX request to get results
-				$.ajax( "/api/all" )
+  			// Refresh the data on the server
+  			function refresh() {
+  				$.ajax("/api/refresh")
 				  .done(function(res) {
+				  	console.log('So fresh and so clean, clean.');
+				  	getData();
+				  })
+				  .fail(function() {
+				    console.error(err.message);
+				  });
+  			}
+
+  			// Make AJAX request to get refresh time
+  			// Then get the data!
+  			function getRefreshed() {
+				$.ajax("/api/refreshed")
+				  .done(function(res) {
+				  	if (new Date() - new Date(res) > 12 * HOUR) {
+				  		console.log('Refreshing data...');
+				  		$.ajax("/api/refresh").done(function(res) {
+				  			refresh();
+				  		});
+				  	} else {
+				  		console.log('Pulling data from the cloud...')
+				  		getData();
+				  	}
+				  })
+				  .fail(function() {
+				    console.error(err.message);
+				  });
+  			}
+
+  			function getData() {
+  				// Make AJAX request to get results
+				$.ajax("/api/all")
+				  .done(function(res) {
+				  	console.log('We got one!');
 				  	data = res;
 				    order(compareWords);
 				  })
 				  .fail(function() {
 				    console.error(err.message);
 				  });
+  			}
+
+			$(document).ready(function() {
+				getRefreshed();
 			});
 		</script>
 	</body>

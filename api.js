@@ -5,6 +5,10 @@ var refresh = module.exports.refresh = function (req, res) {
 	res.send(true);
 };
 
+var refreshed = module.exports.refreshed = function (req, res) {
+	res.send(results.refreshed);
+};
+
 var all = module.exports.all = function (req, res) {
 	res.send(results.data);
 };

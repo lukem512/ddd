@@ -6,7 +6,7 @@ var fs = require('fs');
 var request = require("request");
 
 var results = module.exports.data = [];
-var refreshed = {};
+var refreshed = module.exports.refreshed = {};
 
 var ONE_HOUR = 60 * 60 * 1000;
 
@@ -113,7 +113,7 @@ readwords('5-letters.txt', function(words5) { words[5] = words5; });
 var refresh = module.exports.refresh = function () {
 	// Limit number of refreshes
 	var now = new Date();
-	if (refreshed && (now - refreshed < ONE_HOUR)) {
+	if (module.exports.refreshed && (now - refreshed < ONE_HOUR)) {
 		console.log('Refreshed too recently.');
 		return;
 	}
@@ -122,7 +122,7 @@ var refresh = module.exports.refresh = function () {
 	module.exports.data = [];
 
 	// Set refresh time
-	refreshed = now;
+	module.exports.refreshed = now;
 	console.log('Refreshing data...');
 
 	// Pull data for 3-character domains

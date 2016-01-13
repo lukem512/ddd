@@ -11,7 +11,8 @@ app.set('port', process.env.PORT || 80);
 app.use(morgan('dev'));
 app.use(methodOverride());
 
-app.get('/api/refresh', api.refresh)
+app.get('/api/refresh', api.refresh);
+app.get('/api/refreshed', api.refreshed);
 app.get('/api/all', api.all);
 app.get('/api/words/all', api.words);
 app.get('/api/words/:length', api.words);
