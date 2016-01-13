@@ -2,7 +2,8 @@ var express = require('express'),
     methodOverride = require('method-override'),
     morgan = require('morgan'),
     api = require('./api'),
-    http = require('http');
+    http = require('http'),
+    path = require('path');
 
 var app = module.exports = express();
 
@@ -10,14 +11,18 @@ app.set('port', process.env.PORT || 80);
 app.use(morgan('dev'));
 app.use(methodOverride());
 
+app.get('/api/refresh', api.refresh)
 app.get('/api/all', api.all);
 app.get('/api/words/all', api.words);
 app.get('/api/words/:length', api.words);
 app.get('/api/pronouncable', api.pronouncable);
 
+// Static files in public are routed to "/"
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Default route.
 app.get('/', function(req, res) {
-    res.sendfile(__dirname + '/results.html');
+    res.sendfile(__dirname + '/public/results.html');
 });
 
 // The 404 route.

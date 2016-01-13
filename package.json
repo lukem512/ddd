@@ -5,11 +5,13 @@
   "main": "app.js",
   "dependencies": {
     "express": "^4.13.3",
+    "method-override": "^2.3.5",
     "morgan": "^1.6.1",
     "request": "^2.67.0"
   },
   "devDependencies": {},
   "scripts": {
+    "start": "node app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

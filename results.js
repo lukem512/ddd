@@ -5,7 +5,10 @@
 var fs = require('fs');
 var request = require("request");
 
-var results = module.exports = [];
+var results = module.exports.data = [];
+var refreshed = {};
+
+var ONE_HOUR = 60 * 60 * 1000;
 
 // What makes a good domain?
 function classify(domains) {
@@ -49,12 +52,12 @@ function classify(domains) {
 				}
 
 				// Easy to pronounce?
-		   		if (/^www\.[bcdfghjklmnpqrstvwxyz]?([aeiou][bcdfghjklmnpqrstvwxyz])+[aeiou]?\.com$/.test(domain)) {
+		   		if (/^www\.[bcdfghjklmnpqrstvwxyz(st)(th)(ph)(ch)(ck)]?([aeiou][bcdfghjklmnpqrstvwxyz(st)(th)(ph)(ch)(ck)])+[aeiou]?\.com$/.test(domain)) {
 		    		obj.pronouncable = true;
 		    	}
 
 		    	// Add to array
-		    	results.push(obj);
+		    	module.exports.data.push(obj);
     		});
     	}
     });
@@ -106,33 +109,51 @@ readwords('3-letters.txt', function(words3) { words[3] = words3; });
 readwords('4-letters.txt', function(words4) { words[4] = words4; });
 readwords('5-letters.txt', function(words5) { words[5] = words5; });
 
-// Pull data for 3-character domains
-request("http://www.char3.com", function (err, res, body) {
-	if (err) {
-		throw err;
+// Refresh all data
+var refresh = module.exports.refresh = function () {
+	// Limit number of refreshes
+	var now = new Date();
+	if (refreshed && (now - refreshed < ONE_HOUR)) {
+		console.log('Refreshed too recently.');
+		return;
 	}
-	var cp = /.*(value=\"www\..+\.com\".*)+.*/gi;
-	var domains = extract(body, cp);
-	classify(domains);
-});
 
-// Pull data for 4-character domains
-request("http://www.char4.com", function (err, res, body) {
-	if (err) {
-		throw err;
-	}
-	var cp = /.*(class=\"linkout\">www\..+\.com<.*)+.*/gi;
-	var dp = /.*>(www\..+\.com)<.*/;
-	var domains = extract(body, cp, dp);
-	classify(domains);
-});
+	// Clear results
+	module.exports.data = [];
 
-// Pull data for 5-character domains
-request("http://www.char5.com", function (err, res, body) {
-	if (err) {
-		throw err;
-	}
-	var cp = /.*(value=\"www\..+\.com\".*)+.*/gi;
-	var domains = extract(body, cp);
-	classify(domains);
-});
+	// Set refresh time
+	refreshed = now;
+	console.log('Refreshing data...');
+
+	// Pull data for 3-character domains
+	request("http://www.char3.com", function (err, res, body) {
+		if (err) {
+			throw err;
+		}
+		var cp = /.*(value=\"www\..+\.com\".*)+.*/gi;
+		var domains = extract(body, cp);
+		classify(domains);
+	});
+
+	// Pull data for 4-character domains
+	request("http://www.char4.com", function (err, res, body) {
+		if (err) {
+			throw err;
+		}
+		var cp = /.*(class=\"linkout\">www\..+\.com<.*)+.*/gi;
+		var dp = /.*>(www\..+\.com)<.*/;
+		var domains = extract(body, cp, dp);
+		classify(domains);
+	});
+
+	// Pull data for 5-character domains
+	request("http://www.char5.com", function (err, res, body) {
+		if (err) {
+			throw err;
+		}
+		var cp = /.*(value=\"www\..+\.com\".*)+.*/gi;
+		var domains = extract(body, cp);
+		classify(domains);
+	});
+};
+refresh();
