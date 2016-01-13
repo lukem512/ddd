@@ -6,12 +6,24 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<meta charset="utf-8">
 		<!-- !meta -->
+
+		<!-- Favicon, let's be iconic -->
+		<link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32x32.png">
+		<link rel="icon" type="image/png" sizes="96x96" href="/img/favicon-96x96.png">
+		<link rel="icon" type="image/png" sizes="16x16" href="/img/favicon-16x16.png">
+		<!-- !Favicon -->
 		
 		<!-- Bootstrap, for some aesthetics -->
 		<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
  		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
   		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
   		<!-- !Bootstrap -->
+
+  		<style>
+  			.total {
+  				font-weight: bold;
+  			}
+  		</style>
 	</head>
 	<body>
 		<div class="container">
@@ -81,7 +93,10 @@
 				// Re-fill the table
 				$("#results tbody").empty();
   				data.forEach(function (d) {
-			    	$('#results').append('<tr><td>'+d.name+'</td><td>'+d.matches.words.toString()+'</td><td>'+d.pronouncable+'</td></tr>');
+  					var html = '<tr><td><a href=\"https://iwantmyname.com/search?domain='+d.name+'\" target=\"_blank">'+d.name+'</a></td>' +
+  						'<td>'+ (d.matches.total ? '<span class=\"total\">' : '<span>') + d.matches.words.toString()+'</span></td>' +
+  						'<td>'+d.pronouncable+'</td></tr>';		
+			    	$('#results').append(html);
 				});
   			};
 
