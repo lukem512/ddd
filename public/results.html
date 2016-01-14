@@ -29,10 +29,6 @@
   		<!-- !Bootstrap -->
 
   		<style>
-  			.total {
-  				font-weight: bold;
-  			}
-
   			.pronouncable {
   				height: 2em;
   				max-height: 2em;
@@ -48,7 +44,8 @@
 				<table id="results" class="table table-striped table-hover">
 				<thead>
 						<tr>
-							<th><a href="#" onclick="order(compareName);" title="Order by domain name, alphabetically">Domain</a></th>
+							<th><a href="#" onclick="order(compareUber);" title="Order by rank (best first)">Rank</a></th>
+							<th><a href="#" onclick="order(compareName);" title="Order by domain name, alphabetically">Domain</a> / <a href="#" onclick="order(compareLength);" title="Order by domain name length">Length</a></th>
 							<th><a href="#" onclick="order(compareWords);" title="Sort by length of longest word">Words</a></th>
 							<th><a href="#" onclick="order(comparePronouncable);" title="Sort by pronouncability">Pronouncable</a></th>
 						</tr>
@@ -65,12 +62,23 @@
 		<script>
 			// Soz 4 globals.
 			var data = [];
+			var scored = [];
 			var ordered = compareName;
 
 			// Constant: one hour in ms
 			var HOUR = 60 * 60 * 1000;
 
-			// TODO: order by multiple columns
+			// Order by multiple columns
+			function multicompare (a, b, comparisons) {
+				var comparisons = comparisons || [];
+				if (comparisons.length)
+					var result = comparisons.shift()(a, b);
+					if (result == 0)
+						return multicompare(a, b, comparisons);
+					else
+						return result;
+				return 0;
+			};
 
 			// Basic compare operation
 			function compare (a, b) {
@@ -80,21 +88,27 @@
 					return 1;
 				else
 					return 0;
+			};
+
+			// Compare by length, then words, then name
+			// Best comparison, for the moment.
+			function compareUber (a, b) {
+				return multicompare(a, b, [compareWords, compareLength, comparePronouncable, compareName]);
 			}
 
-			// Sort names by length of name
-			// Then, if it's equal, alphabetically
+			// Sort names alphabetically
 			function compareName (a, b) {
-				var result = compare (a.name.length, b.name.length);
-				if (result == 0)
-					return compare (a.name, b.name);
-				else
-					return result;
+				return compare(a.name, b.name);
+			};
+
+			// Sort names by length of name
+			function compareLength (a, b) {
+				return compare(a.name.length, b.name.length);
 			};
 
 			// Sort words by length of longest word
 			function compareWords (a, b) {
-			    return compare(a.matches.highest, b.matches.highest);
+			    return compare(b.matches.highest, a.matches.highest);
 			};
 
 			// Compare pronouncablility by true/false
@@ -106,16 +120,22 @@
 				else 
 			    	return 0;
 			};
+
+			// Build HTML for rank column
+			function rank(d) {
+				return '<td>'+scored.indexOf(d)+'</td>';
+			}
 			
 			// Build HTML for the domain column
 			function domain(d) {
+				var n = d.name.length - 'www..com'.length;
 				return  '<td><a title=\"Click to check the domain availability\"' +
   						' href=\"https://iwantmyname.com/search?domain='+d.name+'\" target=\"_blank">'+d.name+'</a></td>';
 			};
 
 			// Build HTML for the words column
 			function words(d) {
-				return '<td>'+ (d.matches.total ? '<span class=\"total\">' : '<span>') + d.matches.words.toString()+'</span></td>';
+				return '<td>'+d.matches.words.toString()+'</span></td>';
 			};
 
 			// Build HTML for the pronouncable column
@@ -127,8 +147,17 @@
 
 			// Build HTML for a table row
 			function row(d) {
-				return '<tr>' + domain(d) + words(d) + pronouncable(d) + '</tr>';
+				return  '<tr'+(d.matches.total ? ' class=\"success\"' : '')+'>' +
+						rank(d) + domain(d) + words(d) + pronouncable(d) + '</tr>';
 			};
+
+			// Re-fill the table contents
+			function fill() {
+				$("#results tbody").empty();
+  				data.forEach(function (d) {
+			    	$('#results').append(row(d));
+				});
+			}
 
 			// Sort the data by a specified comparator,
 			// re-populating the table with the new ordering
@@ -140,12 +169,7 @@
 					data = data.sort(comparison);
 				}
 				ordered = comparison;
-
-				// Re-fill the table
-				$("#results tbody").empty();
-  				data.forEach(function (d) {
-			    	$('#results').append(row(d));
-				});
+				fill();
   			};
 
   			// Refresh the data on the server
@@ -186,7 +210,14 @@
 				  .done(function(res) {
 				  	console.log('We got one!');
 				  	data = res;
-				    order(compareWords);
+
+				  	// Score the data
+				  	// keep this secret, keep this safe
+				  	scored = data.slice();
+				  	scored = scored.sort(compareUber);
+
+				  	// Order + fill table!
+				    order(compareUber);
 				  })
 				  .fail(function() {
 				    console.error(err.message);
