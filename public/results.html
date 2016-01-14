@@ -93,7 +93,17 @@
 			// Compare by length, then words, then name
 			// Best comparison, for the moment.
 			function compareUber (a, b) {
-				return multicompare(a, b, [compareWords, compareLength, comparePronouncable, compareName]);
+				return multicompare(a, b, [compareTotal, compareWords, compareLength, comparePronouncable, compareName]);
+			}
+
+			// Does the length of the longest word fill the domain?
+			function compareTotal (a, b) {
+				if (!a.matches.total && b.matches.total)
+					return 1;
+				else if (a.matches.total && !b.matches.total)
+			    	return -1;
+				else 
+			    	return 0;
 			}
 
 			// Sort names alphabetically
