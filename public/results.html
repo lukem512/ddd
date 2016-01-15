@@ -23,10 +23,14 @@
 		<!-- !Favicon -->
 		
 		<!-- Bootstrap, for some aesthetics -->
-		<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
  		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
   		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
   		<!-- !Bootstrap -->
+
+  		<!-- Font Awesome, icons and graphics -->
+  		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.min.css">
+  		<!-- !Font Awesome -->
 
   		<style>
   			.pronouncable {
@@ -37,7 +41,10 @@
 	</head>
 	<body>
 		<div class="container">
-			<h1>Daily Domain Digest</h1>
+			<h1>
+				Daily Domain Digest
+				<sup><a href="#" onclick="getRefreshed();"><i class="fa fa-refresh"></i></a></sup>
+			</h1>
 			<p>A breakdown of the desirable .com domains available today.</p>
 
 			<div class="table-responsive">
@@ -150,7 +157,7 @@
 
 			// Build HTML for the pronouncable column
 			function pronouncable(d) {
-				return  '<td><img title=\"This word is '+(d.pronouncable ? '' : 'not')+' pronouncable\"' +
+				return  '<td><img title=\"This word is'+(d.pronouncable ? '' : ' not')+' pronouncable\"' +
   						' class=\"img-responsive pronouncable\" src=\"img/'+(d.pronouncable ? 'tick' : 'cross')+'.png\">' +
   						'</img></td>';
 			};
@@ -205,8 +212,12 @@
 				  			refresh();
 				  		});
 				  	} else {
-				  		console.log('Pulling data from the cloud...')
-				  		getData();
+				  		if (data.length) {
+				  			console.log('Nothing to see here.');
+				  		} else {
+				  			console.log('Pulling data from the cloud...');
+				  			getData();
+				  		}
 				  	}
 				  })
 				  .fail(function() {
