@@ -100,7 +100,7 @@
 			// Compare by length, then words, then name
 			// Best comparison, for the moment.
 			function compareUber (a, b) {
-				return multicompare(a, b, [compareTotal, compareWords, compareLength, comparePronouncable, compareName]);
+				return multicompare(a, b, [compareTotal, compareWords, compareDesirables, compareLength, comparePronouncable, compareName]);
 			}
 
 			// Does the length of the longest word fill the domain?
@@ -128,6 +128,11 @@
 			    return compare(b.matches.highest, a.matches.highest);
 			};
 
+			// Compare the number of desirable words
+			function compareDesirables (a, b) {
+			    return compare(b.matches.desirables.length, a.matches.desirables.length);
+			};
+
 			// Compare pronouncablility by true/false
 			function comparePronouncable (a, b) {
 				if (!a.pronouncable && b.pronouncable)
@@ -152,7 +157,17 @@
 
 			// Build HTML for the words column
 			function words(d) {
-				return '<td>'+d.matches.words.toString()+'</span></td>';
+				var words = d.matches.desirables.concat(d.matches.words);
+				var html = '';
+				for (var i = 0; i < words.length; i++) {
+					if (i < d.matches.desirables.length)
+						html += ('<b>' + words[i] + '</b>');
+					else
+						html += words[i];
+					if (i < (words.length - 1))
+						html += ', ';
+				}
+				return  '<td>'+html+'</td>';
 			};
 
 			// Build HTML for the pronouncable column

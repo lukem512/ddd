@@ -5,10 +5,16 @@
 var fs = require('fs');
 var request = require("request");
 
+// Store results in memory for speed!
 var results = module.exports.data = [];
 var refreshed = module.exports.refreshed = {};
 
 var ONE_HOUR = 60 * 60 * 1000;
+
+// TODO:
+// 1. Check for non-overlapping words
+// 2. Check for common word pairs
+// 4. Produce a score for each domains
 
 // What makes a good domain?
 function classify(domains) {
@@ -22,43 +28,61 @@ function classify(domains) {
     			pronouncable: false,
     			matches: {
     				words: [],
+    				desirables: [],
     				highest: 0,
     				total: false
     			}
     		}
 
     		// Contains English words?
-    		word(domain, function(matches) {
+    		obj.matches.words = word(domain);
 
-    			// Matches words?
-    			if (matches.length) {
-					// Store them
-					obj.matches.words = matches;
-
-					// Retrieve highest match length
-					matches.forEach(function (w) {
-						if (w.length > obj.matches.highest) {
-							obj.matches.highest = w.length;
-						}
-					});
-
-					// Check for 100% length match
-					if (domain.length == obj.matches.highest) {
-						obj.total = true;
-					}
-
-					// Check for non-overlapping words
-					// TODO
+    		// Check for desirable words
+			deswords.forEach(function (w) {
+				if (domain.toUpperCase().contains(w)) {
+					obj.matches.desirables.push(w);
 				}
+			});
 
-				// Easy to pronounce?
-		   		if (/^www\.[bcdfghjklmnpqrstvwxyz(st)(th)(ph)(ch)(ck)]?([aeiou][bcdfghjklmnpqrstvwxyz(st)(th)(ph)(ch)(ck)])+[aeiou]?\.com$/.test(domain)) {
-		    		obj.pronouncable = true;
-		    	}
+			// Remove any duplicates
+			// This prioritises desirables.
+			obj.matches.desirables.forEach(function(w) {
+				var index = obj.matches.words.indexOf(w);
+				if (index > -1) {
+					obj.matches.words.splice(index, 1);
+				}
+			});
 
-		    	// Add to array
-		    	module.exports.data.push(obj);
-    		});
+			// Retrieve highest match length
+			obj.matches.words.forEach(function (w) {
+				if (w.length > obj.matches.highest) {
+					obj.matches.highest = w.length;
+				}
+			});
+
+			obj.matches.desirables.forEach(function (w) {
+				if (w.length > obj.matches.highest) {
+					obj.matches.highest = w.length;
+				}
+			});
+
+			// Check for 100% length match
+			if (domain.length == obj.matches.highest) {
+				obj.total = true;
+			}
+
+			// Easy to pronounce?
+			// TODO:
+			// 1. Look for s' at the end, if not prefixed by an s
+			// 2. Look for ys at the end
+			// 3. Look for oos and ies
+			// 4. Look for gh at the beginning and end
+	   		if (/^www\.[bcdfghjklmnpqrstvwxyz(st)(th)(ph)(ch)(ck)]?([aeiou][bcdfghjklmnpqrstvwxyz(st)(th)(ph)(ch)(ck)])+[aeiou]?\.com$/.test(domain)) {
+	    		obj.pronouncable = true;
+	    	}
+
+	    	// Add to array
+	    	module.exports.data.push(obj);
     	}
     });
 };
@@ -75,7 +99,7 @@ function extract(html, cp, dp) {
 };
 
 // Is the search term (needle) a word?
-function word(needle, callback) {
+function word(needle) {
 	var found = [];
 	for (var i = needle.length; i > 0; i--) {
 		if (words[i]) {
@@ -87,8 +111,8 @@ function word(needle, callback) {
 			});
 		}
 	}
-	callback(found);
-}
+	return found;
+};
 String.prototype.contains = function(it) { return this.indexOf(it) != -1; };
 
 // Function to read and format a list of words
@@ -104,10 +128,15 @@ function readwords(filename, callback) {
 }
 
 // Read wordlists
-var words = [[], [], [], [], []];
+// Again, store in memory.
+var words = [[], [], [], [], [], []];
 readwords('3-letters.txt', function(words3) { words[3] = words3; });
 readwords('4-letters.txt', function(words4) { words[4] = words4; });
 readwords('5-letters.txt', function(words5) { words[5] = words5; });
+
+// Desirable words
+var deswords = [];
+readwords('desirable-words.txt', function(words) { deswords = words; });
 
 // Refresh all data
 var refresh = module.exports.refresh = function () {
