@@ -23,7 +23,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Default route.
 app.get('/', function(req, res) {
-    res.sendfile(__dirname + '/public/results.html');
+    res.sendFile(__dirname + '/public/results.html');
 });
 
 // The 404 route.
