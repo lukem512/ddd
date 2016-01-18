@@ -4,6 +4,7 @@
   "description": "Find me a good domain, please",
   "main": "app.js",
   "dependencies": {
+    "async": "^1.5.2",
     "express": "^4.13.3",
     "method-override": "^2.3.5",
     "morgan": "^1.6.1",

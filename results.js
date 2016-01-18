@@ -3,9 +3,11 @@
 // github.com/lukem512
 
 var fs = require('fs');
-var request = require("request");
+var request = require('request');
+var async = require('async');
 
 // Store results in memory for speed!
+var __lock = false;
 var results = module.exports.data = [];
 var refreshed = module.exports.refreshed = {};
 
@@ -17,7 +19,7 @@ var ONE_HOUR = 60 * 60 * 1000;
 // 4. Produce a score for each domains
 
 // What makes a good domain?
-function classify(domains) {
+function classify(domains, callback) {
 	domains.forEach(function (domain) {
 		// Remove numbers
     	if (/^www\.[a-zA-Z]+\.com$/.test(domain)) {
@@ -85,6 +87,9 @@ function classify(domains) {
 	    	module.exports.data.push(obj);
     	}
     });
+
+	// Callback!
+	callback();
 };
 
 // Extracts domains using specified container pattern (cp).
@@ -147,6 +152,11 @@ var refresh = module.exports.refresh = function () {
 		return;
 	}
 
+	// Acquire lock
+	if (!__lock) {
+		__lock = true;
+	}
+
 	// Clear results
 	module.exports.data = [];
 
@@ -154,35 +164,51 @@ var refresh = module.exports.refresh = function () {
 	module.exports.refreshed = now;
 	console.log('Refreshing data...');
 
-	// Pull data for 3-character domains
-	request("http://www.char3.com", function (err, res, body) {
-		if (err) {
-			throw err;
-		}
-		var cp = /.*(value=\"www\..+\.com\".*)+.*/gi;
-		var domains = extract(body, cp);
-		classify(domains);
-	});
+	var funcs = [function(callback) {
+		// Pull data for 3-character domains
+		request('http://www.char3.com', function (err, res, body) {
+			if (err) {
+				throw err;
+			}
+			var cp = /.*(value=\"www\..+\.com\".*)+.*/gi;
+			var domains = extract(body, cp);
+			classify(domains, callback);
+		});
+	},
+	function(callback) {
+		// Pull data for 4-character domains
+		request('http://www.char4.com', function (err, res, body) {
+			if (err) {
+				throw err;
+			}
+			var cp = /.*(class=\"linkout\">www\..+\.com<.*)+.*/gi;
+			var dp = /.*>(www\..+\.com)<.*/;
+			var domains = extract(body, cp, dp);
+			classify(domains, callback);
+		});
+	},
+	function(callback) {
+		// Pull data for 5-character domains
+		request('http://www.char5.com', function (err, res, body) {
+			if (err) {
+				throw err;
+			}
+			var cp = /.*(value=\"www\..+\.com\".*)+.*/gi;
+			var domains = extract(body, cp);
+			classify(domains, callback);
+		});
+	}];
 
-	// Pull data for 4-character domains
-	request("http://www.char4.com", function (err, res, body) {
+	// Call the request functions
+	async.each(funcs,
+	function(func, callback) {
+		func(callback);
+	},
+	function(err) {
 		if (err) {
-			throw err;
+			console.error(err.nessage);
 		}
-		var cp = /.*(class=\"linkout\">www\..+\.com<.*)+.*/gi;
-		var dp = /.*>(www\..+\.com)<.*/;
-		var domains = extract(body, cp, dp);
-		classify(domains);
-	});
-
-	// Pull data for 5-character domains
-	request("http://www.char5.com", function (err, res, body) {
-		if (err) {
-			throw err;
-		}
-		var cp = /.*(value=\"www\..+\.com\".*)+.*/gi;
-		var domains = extract(body, cp);
-		classify(domains);
+		__lock = false;
 	});
 };
 refresh();
