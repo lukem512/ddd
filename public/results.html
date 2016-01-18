@@ -151,7 +151,8 @@
 			function domain(d) {
 				var n = d.name.length - 'www..com'.length;
 				return  '<td><a title=\"Click to check the domain availability\"' +
-  						' href=\"https://iwantmyname.com/search?domain='+d.name+'\" target=\"_blank">'+d.name+'</a></td>';
+						' href=\"http://www.shareasale.com/r.cfm?u=1235865&b=210518&m=25581&afftrack=&urllink=https%3A%2F%2Fiwantmyname%2Ecom%2Fsearch%3Fdomain%3D' +
+						d.name.replace('.', '%2E') +'\" target=\"_blank">'+d.name+'</a></td>';
 			};
 
 			// Build HTML for the words column
