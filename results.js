@@ -153,8 +153,11 @@ var refresh = module.exports.refresh = function () {
 	}
 
 	// Acquire lock
-	if (!__lock) {
+	if (__lock) {
+		return;
+	} else {
 		__lock = true;
+	}
 	}
 
 	// Clear results
