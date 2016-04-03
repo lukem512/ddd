@@ -5,6 +5,7 @@
 var fs = require('fs');
 var request = require('request');
 var async = require('async');
+var pronounceable = require('pronounceable');
 
 // Store results in memory for speed!
 var __lock = false;
@@ -73,15 +74,8 @@ function classify(domains, callback) {
 				obj.total = true;
 			}
 
-			// Easy to pronounce?
-			// TODO:
-			// 1. Look for s' at the end, if not prefixed by an s
-			// 2. Look for ys at the end
-			// 3. Look for oos and ies
-			// 4. Look for gh at the beginning and end
-	   		if (/^www\.[bcdfghjklmnpqrstvwxyz(st)(th)(ph)(ch)(ck)]?([aeiou][bcdfghjklmnpqrstvwxyz(st)(th)(ph)(ch)(ck)])+[aeiou]?\.com$/.test(domain)) {
-	    		obj.pronouncable = true;
-	    	}
+			// Check for pronounceability
+			obj.pronouncable = pronounceable.test(domain.substring(4, domain.length-4));
 
 	    	// Add to array
 	    	module.exports.data.push(obj);
@@ -100,7 +94,7 @@ function extract(html, cp, dp) {
 	matches.forEach(function(entry) {
 		domains.push(entry.match(dp)[1]);
 	});
-	return domains
+	return domains;
 };
 
 // Is the search term (needle) a word?
